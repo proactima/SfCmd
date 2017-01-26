@@ -8,29 +8,25 @@ using SfRestApi.Cluster;
 
 namespace SfRestApi.Endpoints
 {
-    public class ImageStore
+    public class ImageStore : BaseEndpoint
     {
-        private readonly IClusterConnection _clusterConnection;
-        private readonly ILogOutput _logger;
-
         public ImageStore(IClusterConnection clusterConnection, ILogOutput logger)
+            : base(clusterConnection, logger)
         {
-            _clusterConnection = clusterConnection;
-            _logger = logger;
         }
 
         public async Task DeleteAsync(string packageName)
         {
             try
             {
-                var requestUriTemp = _clusterConnection.CreateUri($"/ImageStore/{packageName}").ToString();
+                var requestUriTemp = ClusterConnection.CreateUri($"/ImageStore/{packageName}").ToString();
                 var queryParams = new Dictionary<string, string>
                 {
                     ["api-version"] = Constants.ApiVersion
                 };
                 var requestUri = QueryHelpers.AddQueryString(requestUriTemp, queryParams);
 
-                var response = await _clusterConnection.HttpClient.DeleteAsync(requestUri).ConfigureAwait(false);
+                var response = await ClusterConnection.HttpClient.DeleteAsync(requestUri).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
             }
             catch (Exception ex)
@@ -44,8 +40,8 @@ namespace SfRestApi.Endpoints
             try
             {
                 var requestUriTemp = string.IsNullOrWhiteSpace(packageName)
-                    ? _clusterConnection.CreateUri($"/ImageStore")
-                    : _clusterConnection.CreateUri($"/ImageStore/{packageName}");
+                    ? ClusterConnection.CreateUri($"/ImageStore")
+                    : ClusterConnection.CreateUri($"/ImageStore/{packageName}");
 
                 var queryParams = new Dictionary<string, string>
                 {
@@ -53,7 +49,7 @@ namespace SfRestApi.Endpoints
                 };
                 var requestUri = QueryHelpers.AddQueryString(requestUriTemp.ToString(), queryParams);
 
-                var response = await _clusterConnection.HttpClient.GetAsync(requestUri).ConfigureAwait(false);
+                var response = await ClusterConnection.HttpClient.GetAsync(requestUri).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -70,7 +66,7 @@ namespace SfRestApi.Endpoints
             {
                 var fileRelativePath = $"{appPackagePathInStore}\\{fileInImageStore}";
                 var requestUriTemp =
-                    _clusterConnection.CreateUri($"/ImageStore/{appPackagePathInStore}\\{fileInImageStore}").ToString();
+                    ClusterConnection.CreateUri($"/ImageStore/{appPackagePathInStore}\\{fileInImageStore}").ToString();
 
                 var queryParams = new Dictionary<string, string>
                 {
@@ -95,15 +91,15 @@ namespace SfRestApi.Endpoints
                     }
                 }
 
-                _logger.Log($"Uploading {file.FullName} as {fileRelativePath}");
-                var repsonse = await _clusterConnection.HttpClient.PutAsync(requestUri, byteContent).ConfigureAwait(false);
+                Logger.Log($"Uploading {file.FullName} as {fileRelativePath}");
+                var repsonse = await ClusterConnection.HttpClient.PutAsync(requestUri, byteContent).ConfigureAwait(false);
 
-                var responseMessage = repsonse.EnsureSuccessStatusCode();
+                repsonse.EnsureSuccessStatusCode();
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogException(ex);
+                Logger.LogException(ex);
                 return false;
             }
         }

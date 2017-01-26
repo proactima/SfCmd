@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-using Microsoft.Extensions.CommandLineUtils;
-using ServiceFabricUploader.Models;
+﻿using Microsoft.Extensions.CommandLineUtils;
 
 namespace ServiceFabricUploader.Commands.Application
 {
@@ -10,7 +8,7 @@ namespace ServiceFabricUploader.Commands.Application
         {
             app.Command("application", application =>
             {
-                ProvisionCommand.Configure(application);
+                UpgradeCommand.Configure(application);
             });
         }
     }

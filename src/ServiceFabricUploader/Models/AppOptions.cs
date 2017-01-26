@@ -52,46 +52,14 @@ namespace ServiceFabricUploader.Models
             {
                 SecureCluster = rawOptions.CertificateThumbprint.HasValue(),
                 ClusterHostname = rawOptions.ClusterHostname.Value(),
-                ClusterPort = GetIntOrDefaultValue(rawOptions.ClusterPort, 19080),
-                CertificateThumbprint = GetStringOrDefaultValue(rawOptions.CertificateThumbprint, string.Empty),
-                CertificateStore = GetEnumValueOrDefault(rawOptions.CertificateStore, StoreName.My),
-                CertificateLocation = GetEnumValueOrDefault(rawOptions.CertificateLocation, StoreLocation.CurrentUser),
+                ClusterPort = OptionsHelper.GetIntOrDefaultValue(rawOptions.ClusterPort, 19080),
+                CertificateThumbprint = OptionsHelper.GetStringOrDefaultValue(rawOptions.CertificateThumbprint, string.Empty),
+                CertificateStore = OptionsHelper.GetEnumValueOrDefault(rawOptions.CertificateStore, StoreName.My),
+                CertificateLocation = OptionsHelper.GetEnumValueOrDefault(rawOptions.CertificateLocation, StoreLocation.CurrentUser),
                 Verbose = rawOptions.Verbose.HasValue()
             };
 
             return config;
-        }
-
-        private static T GetEnumValueOrDefault<T>(CommandOption rawConfigOption, T defaultValue)
-            where T : struct, IConvertible
-        {
-            if (!rawConfigOption.HasValue())
-                return defaultValue;
-
-            T value;
-            return Enum.TryParse(rawConfigOption.Value(), out value)
-                ? value
-                : defaultValue;
-        }
-
-        private static string GetStringOrDefaultValue(CommandOption rawConfigOption, string defaultValue)
-        {
-            return rawConfigOption.HasValue()
-                ? rawConfigOption.Value()
-                : defaultValue;
-        }
-
-        private static int GetIntOrDefaultValue(CommandOption rawConfigOption, int defaultValue)
-        {
-            if (!rawConfigOption.HasValue())
-                return defaultValue;
-
-            var value = rawConfigOption.Value();
-            int actualValue;
-            if (Int32.TryParse(value, out actualValue))
-                return actualValue;
-
-            throw new Exception("Unable to parse Cluster Port");
         }
     }
 

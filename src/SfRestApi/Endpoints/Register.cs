@@ -9,22 +9,18 @@ using SfRestApi.Cluster;
 
 namespace SfRestApi.Endpoints
 {
-    public class Register
+    public class Register : BaseEndpoint
     {
-        private readonly ILogOutput _logger;
-        private readonly IClusterConnection _clusterConnection;
-
         public Register(IClusterConnection clusterConnection, ILogOutput logger)
+            : base(clusterConnection, logger)
         {
-            _clusterConnection = clusterConnection;
-            _logger = logger;
         }
 
         public async Task<bool> RegisterAsync(string packageName)
         {
             try
             {
-                var requestUriTemp = _clusterConnection.CreateUri($"/ApplicationTypes/$/Provision").ToString();
+                var requestUriTemp = ClusterConnection.CreateUri($"/ApplicationTypes/$/Provision").ToString();
                 var queryParams = new Dictionary<string, string>
                 {
                     ["api-version"] = Constants.ApiVersion
@@ -38,14 +34,14 @@ namespace SfRestApi.Endpoints
 
                 var bodyContent = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
 
-                _logger.Log($"Registering {packageName}");
+                Logger.Log($"Registering {packageName}");
                 var response =
-                    await _clusterConnection.HttpClient.PostAsync(requestUri, bodyContent).ConfigureAwait(false);
+                    await ClusterConnection.HttpClient.PostAsync(requestUri, bodyContent).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
             }
             catch (Exception ex)
             {
-                _logger.LogException(ex);
+                Logger.LogException(ex);
                 return false;
             }
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.CommandLineUtils;
 
-namespace ServiceFabricUploader.Commands.Application
+namespace ServiceFabricUploader.Commands.ApplicationType
 {
     public class ProvisionCommandOptionsRaw
     {
