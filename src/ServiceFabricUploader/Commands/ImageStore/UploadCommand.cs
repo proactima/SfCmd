@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -41,16 +42,16 @@ namespace ServiceFabricUploader.Commands.ImageStore
 
             var logger = new Logger(appOptions.Verbose);
             var imageStore = new SfRestApi.Endpoints.ImageStore(connection, logger);
-            var failedUploads = new List<FileInfo>();
+            var failedUploads = new ConcurrentBag<FileInfo>();
 
-            foreach (var fileToUpload in filesToUpload)
+            Parallel.ForEach(filesToUpload, async (currentFile) =>
             {
                 var success =
-                    await imageStore.UploadAsync(fileToUpload.Key, fileToUpload.Value, commandConfig.PackageName).ConfigureAwait(false);
+                    await imageStore.UploadAsync(currentFile.Key, currentFile.Value, commandConfig.PackageName).ConfigureAwait(false);
                 if (!success)
-                    failedUploads.Add(fileToUpload.Key);
-            }
-
+                    failedUploads.Add(currentFile.Key);
+            });
+            
             if (!failedUploads.Any())
             {
                 logger.Log($"Upload completed.");
