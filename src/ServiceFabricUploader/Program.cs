@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.CommandLineUtils;
+using ServiceFabricUploader.Commands.Application;
 using ServiceFabricUploader.Commands.ApplicationType;
 using ServiceFabricUploader.Commands.ImageStore;
 
@@ -19,6 +20,7 @@ namespace ServiceFabricUploader
 
                 ImageStoreCommand.Configure(app);
                 ApplicationTypeCommands.Configure(app);
+                ApplicationCommands.Configure(app);
 
                 var errCode = app.Execute(args);
                 if (errCode != 0)
