@@ -4,15 +4,22 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
+using Polly;
+using Polly.Retry;
 using SfRestApi.Cluster;
 
 namespace SfRestApi.Endpoints
 {
     public class ImageStore : BaseEndpoint
     {
+        private readonly RetryPolicy<HttpResponseMessage> retryPolicy;
+
         public ImageStore(IClusterConnection clusterConnection, ILogOutput logger)
             : base(clusterConnection, logger)
         {
+            retryPolicy = Policy
+                .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+                .WaitAndRetryAsync(5, i => TimeSpan.FromSeconds(Math.Pow(2, i)));
         }
 
         public async Task DeleteAsync(string packageName)
@@ -59,7 +66,7 @@ namespace SfRestApi.Endpoints
                 Console.WriteLine(ex.Message);
             }
         }
-        
+
         public async Task<bool> UploadAsync(FileInfo file, string fileInImageStore, string appPackagePathInStore)
         {
             try
@@ -83,7 +90,9 @@ namespace SfRestApi.Endpoints
                 }
                 else
                 {
-                    using (var sourceStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.None))
+                    using (
+                        var sourceStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.None)
+                    )
                     {
                         var data = new byte[file.Length];
                         await sourceStream.ReadAsync(data, 0, data.Length).ConfigureAwait(false);
@@ -92,10 +101,12 @@ namespace SfRestApi.Endpoints
                 }
 
                 Logger.Log($"Uploading {file.FullName} as {fileRelativePath}");
-                var repsonse = await ClusterConnection.HttpClient.PutAsync(requestUri, byteContent).ConfigureAwait(false);
 
-                repsonse.EnsureSuccessStatusCode();
-                return true;
+                var response = await retryPolicy
+                    .ExecuteAsync(() => ClusterConnection.HttpClient.PutAsync(requestUri, byteContent))
+                    .ConfigureAwait(false);
+
+                return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {

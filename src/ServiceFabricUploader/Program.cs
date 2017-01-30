@@ -25,10 +25,11 @@ namespace ServiceFabricUploader
                 var errCode = app.Execute(args);
                 if (errCode != 0)
                 {
-                    Console.WriteLine("Error parsing options...");
-                    Console.WriteLine();
+                    //Console.WriteLine("Error parsing options...");
+                    //Console.WriteLine();
 
-                    app.ShowHelp();
+                    //app.ShowHelp();
+                    Console.WriteLine($"Something went wrong - exited with status code {errCode}");
                     return errCode;
                 }
             }
