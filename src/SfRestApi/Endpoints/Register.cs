@@ -37,7 +37,24 @@ namespace SfRestApi.Endpoints
                 Logger.Log($"Registering {packageName}");
                 var response =
                     await ClusterConnection.HttpClient.PostAsync(requestUri, bodyContent).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
+
+                if(!response.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        var errorBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        Console.WriteLine("Things exploded...");
+                        Console.WriteLine(errorBody);
+                    }
+                    catch (Exception ex)
+                    {
+                        return false;
+                    }
+
+                    return false;
+                }
+
+                return true;
             }
             catch (Exception ex)
             {
